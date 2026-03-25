@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Auth - GitHub Pages</title>
+    <style>
+        /* Gaya Tampilan (CSS) */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 350px;
+        }
+        h2 { color: #333; margin-bottom: 10px; }
+        p { color: #666; font-size: 14px; margin-bottom: 25px; }
+        
+        /* Tombol */
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn-google {
+            background: #4285F4;
+            color: white;
+        }
+        .btn-google:hover { background: #357ae8; }
+        
+        .btn-logout {
+            background: #ff4757;
+            color: white;
+            margin-top: 15px;
+        }
+
+        /* Profil User */
+        #profile { display: none; }
+        #profile img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 4px solid #4285F4;
+            margin-bottom: 15px;
+        }
+        #user-name { margin: 10px 0 5px; color: #222; }
+        #user-email { color: #777; font-size: 14px; margin-bottom: 20px; }
+
+        /* Loading Spinner Sederhana */
+        #loading { display: none; color: #4285F4; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div id="login-ui">
+            <h2>Masuk Ke Akun</h2>
+            <p>Klik tombol di bawah untuk login menggunakan akun Google kamu.</p>
+            <button class="btn btn-google" id="login-btn">Login dengan Google</button>
+        </div>
+
+        <div id="loading">Memproses...</div>
+
+        <div id="profile">
+            <img id="user-photo" src="" alt="Foto Profil">
+            <h3 id="user-name"></h3>
+            <p id="user-email"></p>
+            <button class="btn btn-logout" id="logout-btn">Keluar (Logout)</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+        import { 
+            getAuth, 
+            signInWithRedirect, 
+            getRedirectResult, 
+            GoogleAuthProvider, 
+            onAuthStateChanged, 
+            signOut 
+        } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+
+        // Konfigurasi Project testing-eb8f6
+        const firebaseConfig = {
+            apiKey: "AIzaSyDUs1G-nzJwL78GsaUQX-BmbRz6QSW6_kU",
+            authDomain: "testing-eb8f6.firebaseapp.com",
+            projectId: "testing-eb8f6",
+            storageBucket: "testing-eb8f6.firebasestorage.app",
+            messagingSenderId: "264152153312",
+            appId: "1:264152153312:web:75fbc799ee8bd4fa5f2485",
+            measurementId: "G-Y6JKT7W4TK"
+        };
+
+        // Inisialisasi Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        // Referensi Elemen DOM
+        const loginUi = document.getElementById('login-ui');
+        const profileUi = document.getElementById('profile');
+        const loadingUi = document.getElementById('loading');
+        const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        // 1. FUNGSI LOGIN (Redirect)
+        loginBtn.onclick = () => {
+            loginUi.style.display = 'none';
+            loadingUi.style.display = 'block';
+            signInWithRedirect(auth, provider);
+        };
+
+        // 2. FUNGSI LOGOUT
+        logoutBtn.onclick = () => {
+            signOut(auth).then(() => {
+                window.location.reload();
+            });
+        };
+
+        // 3. MENANGKAP HASIL REDIRECT (Setelah balik dari Google)
+        getRedirectResult(auth)
+            .then((result) => {
+                if (result) {
+                    console.log("Berhasil login:", result.user);
+                }
+            })
+            .catch((error) => {
+                console.error("Error redirect:", error.message);
+                alert("Gagal login: " + error.message);
+                loadingUi.style.display = 'none';
+                loginUi.style.display = 'block';
+            });
+
+        // 4. MONITOR STATUS LOGIN (Real-time)
+        onAuthStateChanged(auth, (user) => {
+            loadingUi.style.display = 'none';
+            if (user) {
+                // User sedang login
+                loginUi.style.display = 'none';
+                profileUi.style.display = 'block';
+
+                document.getElementById('user-name').innerText = user.displayName;
+                document.getElementById('user-email').innerText = user.email;
+                document.getElementById('user-photo').src = user.photoURL;
+            } else {
+                // User tidak login
+                loginUi.style.display = 'block';
+                profileUi.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
