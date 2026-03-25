@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Debug Google Auth - Mobile</title>
+    <title>Super Debug Google Auth</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Fira+Code:wght@400&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -35,24 +35,26 @@
             padding: 30px;
             box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
             text-align: center;
+            margin-top: 20px;
         }
 
-        /* Tampilan Profil */
-        #profile-ui, #login-ui, #loading-ui { display: none; }
+        /* UI State */
+        #login-ui, #profile-ui, #loading-ui { display: none; }
 
         .user-header { margin-bottom: 25px; }
         #user-photo {
-            width: 80px;
-            height: 80px;
+            width: 85px;
+            height: 85px;
             border-radius: 50%;
             border: 3px solid var(--primary);
             margin-bottom: 10px;
+            object-fit: cover;
         }
 
-        /* Area JSON (PENTING) */
+        /* JSON Box */
         .json-section {
             text-align: left;
-            margin-top: 30px;
+            margin-top: 25px;
             background: var(--code-bg);
             border-radius: 12px;
             padding: 15px;
@@ -61,8 +63,9 @@
         .json-section h4 {
             margin: 0 0 10px 0;
             color: #10b981;
-            font-size: 14px;
+            font-size: 13px;
             text-transform: uppercase;
+            letter-spacing: 1px;
         }
         pre {
             font-family: 'Fira Code', monospace;
@@ -71,11 +74,11 @@
             white-space: pre-wrap;
             word-wrap: break-word;
             margin: 0;
-            max-height: 300px;
+            max-height: 250px;
             overflow-y: auto;
         }
 
-        /* Tombol */
+        /* Buttons */
         .btn {
             width: 100%;
             padding: 14px;
@@ -85,7 +88,12 @@
             font-weight: 600;
             cursor: pointer;
             transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
+        .btn:active { transform: scale(0.98); }
         .btn-google { background: white; color: #1e293b; }
         .btn-logout { background: #ef4444; color: white; margin-top: 20px; }
 
@@ -107,13 +115,16 @@
     <div class="container">
         <div id="loading-ui" style="display: block;">
             <div class="spinner"></div>
-            <p>Mengecek Sesi...</p>
+            <p>Mengecek Sesi Login...</p>
         </div>
 
         <div id="login-ui">
-            <h2>Debug Mode</h2>
-            <p style="color: var(--text-dim)">Login untuk melihat data JSON dari Google</p>
-            <button class="btn btn-google" id="login-btn">Login dengan Google</button>
+            <h2 style="margin-top: 0;">Debug Mode</h2>
+            <p style="color: var(--text-dim)">Ketuk tombol di bawah untuk login. Data JSON akan muncul di sini setelah sukses.</p>
+            <button class="btn btn-google" id="login-btn">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" width="18" alt="G">
+                Login dengan Google
+            </button>
         </div>
 
         <div id="profile-ui">
@@ -124,8 +135,8 @@
             </div>
 
             <div class="json-section">
-                <h4>Raw JSON Response:</h4>
-                <pre id="json-display">Memuat data...</pre>
+                <h4>Data JSON dari Google:</h4>
+                <pre id="json-display">Memproses data...</pre>
             </div>
 
             <button class="btn btn-logout" id="logout-btn">Logout & Hapus Sesi</button>
@@ -139,6 +150,9 @@
             GoogleAuthProvider, onAuthStateChanged, signOut,
             setPersistence, browserLocalPersistence 
         } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+
+        // Step 1: Inisialisasi
+        alert("INFO: Script Firebase Berhasil Dimuat!");
 
         const firebaseConfig = {
             apiKey: "AIzaSyDUs1G-nzJwL78GsaUQX-BmbRz6QSW6_kU",
@@ -159,62 +173,59 @@
         const loadingUi = document.getElementById('loading-ui');
         const jsonDisplay = document.getElementById('json-display');
 
-        // Login
+        // FUNGSI LOGIN
         document.getElementById('login-btn').onclick = async () => {
-            await setPersistence(auth, browserLocalPersistence);
-            signInWithRedirect(auth, provider);
+            try {
+                alert("INFO: Sedang mengalihkan ke Google...");
+                await setPersistence(auth, browserLocalPersistence);
+                signInWithRedirect(auth, provider);
+            } catch (e) {
+                alert("ERROR LOGIN: " + e.message);
+            }
         };
 
-        // Logout
+        // FUNGSI LOGOUT
         document.getElementById('logout-btn').onclick = () => {
-            signOut(auth).then(() => window.location.reload());
+            signOut(auth).then(() => {
+                alert("Sesi dihapus. Me-refresh halaman...");
+                window.location.reload();
+            });
         };
 
-        // Tangkap hasil redirect
-        // Ganti bagian getRedirectResult di script kamu dengan ini:
-getRedirectResult(auth)
-    .then((result) => {
-        if (result) {
-            console.log("Login Berhasil!");
-        } else {
-            // Kalau login gagal atau dibatalkan sistem, ini akan muncul
-            console.log("Sesi kosong, menunggu login...");
-        }
-    })
-    .catch((error) => {
-        // INI PENTING: Jika ada masalah domain atau konfigurasi,
-        // HP kamu akan memunculkan kotak pesan otomatis.
-        alert("ERROR DARI GOOGLE: " + error.code + " - " + error.message);
-    });
+        // Step 2: Tangkap hasil setelah balik dari Google
+        getRedirectResult(auth)
+            .then((result) => {
+                if (result) {
+                    alert("SUKSES: Berhasil masuk sebagai " + result.user.displayName);
+                }
+            })
+            .catch((err) => {
+                // INI ALERT PALING PENTING. Kalau ada error authorized domain, muncul di sini.
+                alert("ERROR REDIRECT: " + err.code + "\n" + err.message);
+            });
 
-
-        // Pantau Status (Ini yang menampilkan JSON)
+        // Step 3: Monitor Status Login (Persistent)
         onAuthStateChanged(auth, (user) => {
             loadingUi.style.display = 'none';
             if (user) {
+                alert("INFO: User terdeteksi login (" + user.email + ")");
                 loginUi.style.display = 'none';
                 profileUi.style.display = 'block';
                 
-                // Isi UI Profil
                 document.getElementById('user-name').innerText = user.displayName;
                 document.getElementById('user-email').innerText = user.email;
                 document.getElementById('user-photo').src = user.photoURL;
 
-                // TAMPILKAN JSON KE LAYAR
-                // Kita ambil objek user dan ubah ke string yang rapi
-                const userData = {
+                // Tampilkan JSON yang rapi
+                const dataKeLayar = {
                     uid: user.uid,
-                    displayName: user.displayName,
+                    name: user.displayName,
                     email: user.email,
-                    emailVerified: user.emailVerified,
-                    photoURL: user.photoURL,
-                    isAnonymous: user.isAnonymous,
+                    photo: user.photoURL,
                     metadata: user.metadata,
-                    providerData: user.providerData,
-                    stsTokenManager: user.stsTokenManager // Ini berisi Token akses
+                    token: user.stsTokenManager
                 };
-                
-                jsonDisplay.innerText = JSON.stringify(userData, null, 2);
+                jsonDisplay.innerText = JSON.stringify(dataKeLayar, null, 2);
             } else {
                 loginUi.style.display = 'block';
                 profileUi.style.display = 'none';
