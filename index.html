@@ -3,72 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium Google Auth</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>Debug Google Auth - Mobile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Fira+Code:wght@400&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #4285F4;
-            --bg: #f8fafc;
-            --text: #1e293b;
-            --card-bg: #ffffff;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --code-bg: #000000;
         }
 
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: var(--bg);
-            color: var(--text);
+            color: var(--text-main);
             margin: 0;
+            padding: 20px;
             display: flex;
             justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
+            align-items: flex-start;
+            min-height: 100vh;
         }
 
-        /* Container & Card Design */
-        .auth-card {
+        .container {
+            width: 100%;
+            max-width: 500px;
             background: var(--card-bg);
-            padding: 40px;
             border-radius: 24px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            width: 90%;
-            max-width: 400px;
+            padding: 30px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
             text-align: center;
-            transition: all 0.3s ease;
         }
 
-        /* UI States */
-        #login-ui, #profile-ui, #loading-ui { display: none; }
+        /* Tampilan Profil */
+        #profile-ui, #login-ui, #loading-ui { display: none; }
 
-        /* Typography */
-        h2 { font-weight: 700; margin-bottom: 8px; font-size: 24px; }
-        p { color: #64748b; font-size: 14px; margin-bottom: 30px; }
-
-        /* Profile Elements */
-        .avatar-wrapper {
-            position: relative;
-            display: inline-block;
-            margin-bottom: 20px;
-        }
+        .user-header { margin-bottom: 25px; }
         #user-photo {
-            width: 100px;
-            height: 100px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
-            border: 4px solid #e2e8f0;
-            object-fit: cover;
-        }
-        .status-dot {
-            height: 15px;
-            width: 15px;
-            background-color: #22c55e;
-            border-radius: 50%;
-            position: absolute;
-            bottom: 5px;
-            right: 5px;
-            border: 3px solid white;
+            border: 3px solid var(--primary);
+            margin-bottom: 10px;
         }
 
-        /* Buttons Style */
+        /* Area JSON (PENTING) */
+        .json-section {
+            text-align: left;
+            margin-top: 30px;
+            background: var(--code-bg);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid #334155;
+        }
+        .json-section h4 {
+            margin: 0 0 10px 0;
+            color: #10b981;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        pre {
+            font-family: 'Fira Code', monospace;
+            font-size: 11px;
+            color: #34d399;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin: 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        /* Tombol */
         .btn {
             width: 100%;
             padding: 14px;
@@ -77,83 +84,62 @@
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            transition: transform 0.2s, background 0.2s;
+            transition: 0.2s;
         }
-        .btn:active { transform: scale(0.98); }
+        .btn-google { background: white; color: #1e293b; }
+        .btn-logout { background: #ef4444; color: white; margin-top: 20px; }
 
-        .btn-google {
-            background: white;
-            color: #334155;
-            border: 1px solid #e2e8f0;
-        }
-        .btn-google:hover { background: #f1f5f9; }
-
-        .btn-logout {
-            background: #fee2e2;
-            color: #ef4444;
-            margin-top: 20px;
-        }
-        .btn-logout:hover { background: #fecaca; }
-
-        /* Loading Animation */
+        /* Spinner */
         .spinner {
-            border: 4px solid #f3f3f3;
+            border: 4px solid #334155;
             border-top: 4px solid var(--primary);
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 30px;
+            height: 30px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
+            margin: 20px auto;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <div class="auth-card">
+    <div class="container">
         <div id="loading-ui" style="display: block;">
             <div class="spinner"></div>
-            <h3>Menyiapkan Sesi...</h3>
+            <p>Mengecek Sesi...</p>
         </div>
 
         <div id="login-ui">
-            <h2>Selamat Datang</h2>
-            <p>Silakan masuk untuk mengakses dashboard Anda.</p>
-            <button class="btn btn-google" id="login-btn">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" width="18" alt="Google Icon">
-                Login dengan Google
-            </button>
+            <h2>Debug Mode</h2>
+            <p style="color: var(--text-dim)">Login untuk melihat data JSON dari Google</p>
+            <button class="btn btn-google" id="login-btn">Login dengan Google</button>
         </div>
 
         <div id="profile-ui">
-            <div class="avatar-wrapper">
-                <img id="user-photo" src="" alt="Profile">
-                <div class="status-dot"></div>
+            <div class="user-header">
+                <img id="user-photo" src="" alt="Photo">
+                <h2 id="user-name" style="margin: 5px 0;"></h2>
+                <p id="user-email" style="margin: 0; color: var(--text-dim);"></p>
             </div>
-            <h2 id="user-name">Memuat Nama...</h2>
-            <p id="user-email">email@domain.com</p>
-            <button class="btn btn-logout" id="logout-btn">Keluar</button>
+
+            <div class="json-section">
+                <h4>Raw JSON Response:</h4>
+                <pre id="json-display">Memuat data...</pre>
+            </div>
+
+            <button class="btn btn-logout" id="logout-btn">Logout & Hapus Sesi</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
         import { 
-            getAuth, 
-            signInWithRedirect, 
-            getRedirectResult, 
-            GoogleAuthProvider, 
-            onAuthStateChanged, 
-            signOut,
-            setPersistence,
-            browserLocalPersistence 
+            getAuth, signInWithRedirect, getRedirectResult, 
+            GoogleAuthProvider, onAuthStateChanged, signOut,
+            setPersistence, browserLocalPersistence 
         } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
-        // Konfigurasi Project eb8f6
         const firebaseConfig = {
             apiKey: "AIzaSyDUs1G-nzJwL78GsaUQX-BmbRz6QSW6_kU",
             authDomain: "testing-eb8f6.firebaseapp.com",
@@ -171,36 +157,52 @@
         const loginUi = document.getElementById('login-ui');
         const profileUi = document.getElementById('profile-ui');
         const loadingUi = document.getElementById('loading-ui');
+        const jsonDisplay = document.getElementById('json-display');
 
-        // FUNGSI LOGIN
+        // Login
         document.getElementById('login-btn').onclick = async () => {
-            // Mengatur persistensi agar sesi tersimpan di browser storage
             await setPersistence(auth, browserLocalPersistence);
             signInWithRedirect(auth, provider);
         };
 
-        // FUNGSI LOGOUT
+        // Logout
         document.getElementById('logout-btn').onclick = () => {
             signOut(auth).then(() => window.location.reload());
         };
 
-        // CEK HASIL REDIRECT (Saat kembali dari Google)
+        // Tangkap hasil redirect
         getRedirectResult(auth).catch((err) => {
             if(err.code !== 'auth/no-auth-event') alert("Error: " + err.message);
         });
 
-        // OBSERVER: Ini yang menjaga user tetap login
+        // Pantau Status (Ini yang menampilkan JSON)
         onAuthStateChanged(auth, (user) => {
             loadingUi.style.display = 'none';
             if (user) {
-                // User sudah login
                 loginUi.style.display = 'none';
                 profileUi.style.display = 'block';
+                
+                // Isi UI Profil
                 document.getElementById('user-name').innerText = user.displayName;
                 document.getElementById('user-email').innerText = user.email;
                 document.getElementById('user-photo').src = user.photoURL;
+
+                // TAMPILKAN JSON KE LAYAR
+                // Kita ambil objek user dan ubah ke string yang rapi
+                const userData = {
+                    uid: user.uid,
+                    displayName: user.displayName,
+                    email: user.email,
+                    emailVerified: user.emailVerified,
+                    photoURL: user.photoURL,
+                    isAnonymous: user.isAnonymous,
+                    metadata: user.metadata,
+                    providerData: user.providerData,
+                    stsTokenManager: user.stsTokenManager // Ini berisi Token akses
+                };
+                
+                jsonDisplay.innerText = JSON.stringify(userData, null, 2);
             } else {
-                // User belum login
                 loginUi.style.display = 'block';
                 profileUi.style.display = 'none';
             }
