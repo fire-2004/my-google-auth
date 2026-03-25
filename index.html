@@ -1,237 +1,183 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Auth Debug - Mobile</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Fira+Code:wght@400&display=swap" rel="stylesheet">
+    <title>Firebase Google Sign-In</title>
     <style>
-        :root {
-            --primary: #4285F4;
-            --bg: #0f172a;
-            --card-bg: #1e293b;
-            --text-main: #f8fafc;
-            --text-dim: #94a3b8;
-            --code-bg: #000000;
-        }
-
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--bg);
-            color: var(--text-main);
-            margin: 0;
-            padding: 20px;
+            font-family: Arial, sans-serif;
             display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 500px;
-            background: var(--card-bg);
-            border-radius: 24px;
-            padding: 30px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        /* State UI */
-        #login-ui, #profile-ui, #loading-ui { display: none; }
-
-        .user-header { margin-bottom: 25px; }
-        #user-photo {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            border: 3px solid var(--primary);
-            margin-bottom: 12px;
-            object-fit: cover;
-        }
-
-        /* JSON Display Box */
-        .json-section {
-            text-align: left;
-            margin-top: 25px;
-            background: var(--code-bg);
-            border-radius: 12px;
-            padding: 15px;
-            border: 1px solid #334155;
-        }
-        .json-section h4 {
-            margin: 0 0 10px 0;
-            color: #10b981;
-            font-size: 13px;
-            text-transform: uppercase;
-        }
-        pre {
-            font-family: 'Fira Code', monospace;
-            font-size: 11px;
-            color: #34d399;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            margin: 0;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        /* Buttons */
-        .btn {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            transition: 0.2s;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+            color: #333;
         }
-        .btn:active { transform: scale(0.98); }
-        .btn-google { background: white; color: #1e293b; }
-        .btn-logout { background: #ef4444; color: white; margin-top: 20px; }
-
-        /* Loading Spinner */
-        .spinner {
-            border: 4px solid #334155;
-            border-top: 4px solid var(--primary);
-            border-radius: 50%;
-            width: 35px;
-            height: 35px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        h1 {
+            color: #0d47a1;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #4285f4;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #357ae8;
+        }
+        #auth-status {
+            margin-top: 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #555;
+        }
+        #user-info {
+            margin-top: 20px;
+            text-align: left;
+            background-color: #e8f0fe;
+            padding: 15px;
+            border-radius: 5px;
+            word-break: break-all; /* Ensures long strings wrap */
+            white-space: pre-wrap; /* Preserves whitespace and wraps lines */
+        }
+        #user-info pre {
+            margin: 0;
+            font-size: 0.9em;
+            color: #333;
+        }
     </style>
 </head>
 <body>
-
     <div class="container">
-        <div id="loading-ui" style="display: block;">
-            <div class="spinner"></div>
-            <p>Memuat Sistem...</p>
+        <h1>Firebase Google Sign-In</h1>
+        <div id="auth-buttons">
+            <button id="google-sign-in-btn">Sign in with Google</button>
+            <button id="sign-out-btn" style="display: none;">Sign Out</button>
         </div>
-
-        <div id="login-ui">
-            <h2 style="margin-top: 0;">Login Akun</h2>
-            <p style="color: var(--text-dim)">Ketuk tombol di bawah untuk masuk. Data mentah (JSON) akan muncul setelah login berhasil.</p>
-            <button class="btn btn-google" id="login-btn">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" width="18" alt="G">
-                Login dengan Google
-            </button>
-        </div>
-
-        <div id="profile-ui">
-            <div class="user-header">
-                <img id="user-photo" src="" alt="Photo">
-                <h2 id="user-name" style="margin: 5px 0;"></h2>
-                <p id="user-email" style="margin: 0; color: var(--text-dim);"></p>
-            </div>
-
-            <div class="json-section">
-                <h4>Raw JSON Response:</h4>
-                <pre id="json-display">Memproses data...</pre>
-            </div>
-
-            <button class="btn btn-logout" id="logout-btn">Logout (Hapus Sesi)</button>
+        <p id="auth-status"></p>
+        <div id="user-info">
+            <h2>User Info (JSON Response):</h2>
+            <pre id="json-display">No user signed in.</pre>
         </div>
     </div>
 
+    <!-- Firebase SDKs -->
     <script type="module">
+        // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-        import { 
-            getAuth, signInWithRedirect, getRedirectResult, 
-            GoogleAuthProvider, onAuthStateChanged, signOut,
-            setPersistence, browserLocalPersistence 
-        } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
-        // Konfigurasi Project eb8f6
+        // Your web app's Firebase configuration
         const firebaseConfig = {
-            apiKey: "AIzaSyDUs1G-nzJwL78GsaUQX-BmbRz6QSW6_kU",
-            authDomain: "testing-eb8f6.firebaseapp.com",
-            projectId: "testing-eb8f6",
-            storageBucket: "testing-eb8f6.firebasestorage.app",
-            messagingSenderId: "264152153312",
-            appId: "1:264152153312:web:75fbc799ee8bd4fa5f2485",
-            measurementId: "G-Y6JKT7W4TK"
+          apiKey: "AIzaSyDUs1G-nzJwL78GsaUQX-BmbRz6QSW6_kU",
+          authDomain: "testing-eb8f6.firebaseapp.com",
+          projectId: "testing-eb8f6",
+          storageBucket: "testing-eb8f6.firebasestorage.app",
+          messagingSenderId: "264152153312",
+          appId: "1:264152153312:web:75fbc799ee8bd4fa5f2485",
+          measurementId: "G-Y6JKT7W4TK"
         };
 
-        alert("Alert 1: Script Terbaca");
-
+        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
 
-        const loginUi = document.getElementById('login-ui');
-        const profileUi = document.getElementById('profile-ui');
-        const loadingUi = document.getElementById('loading-ui');
+        // Get references to HTML elements
+        const googleSignInBtn = document.getElementById('google-sign-in-btn');
+        const signOutBtn = document.getElementById('sign-out-btn');
+        const authStatus = document.getElementById('auth-status');
         const jsonDisplay = document.getElementById('json-display');
 
-        // FUNGSI UTAMA UNTUK CEK STATUS
-        async function startApp() {
+        // Google Sign-In function
+        googleSignInBtn.addEventListener('click', async () => {
             try {
-                // Cek apakah user baru saja kembali dari halaman Google
-                const result = await getRedirectResult(auth);
-                if (result) {
-                    alert("Alert 3: Berhasil Login! Halo " + result.user.displayName);
-                }
-            } catch (err) {
-                // Jika domain tidak diizinkan, error muncul di sini
-                alert("ERROR REDIRECT: " + err.code + " | " + err.message);
+                const result = await signInWithPopup(auth, provider);
+                // User is signed in. The user object is handled by onAuthStateChanged.
+                // You can also get credential and user info directly from 'result' here if needed.
+                // const user = result.user;
+                // const credential = GoogleAuthProvider.credentialFromResult(result);
+                // const accessToken = credential.accessToken;
+            } catch (error) {
+                // Handle Errors here.
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                // The email of the user's account used.
+                const email = error.customData?.email;
+                // The AuthCredential type that was used.
+                const credential = GoogleAuthProvider.credentialFromError(error);
+
+                console.error("Google Sign-In Error:", errorMessage);
+                authStatus.textContent = `Error: ${errorMessage}`;
+                jsonDisplay.textContent = JSON.stringify({ errorCode, errorMessage, email, credential }, null, 2);
             }
+        });
 
-            // Pantau status login secara real-time
-            onAuthStateChanged(auth, (user) => {
-                loadingUi.style.display = 'none';
-                if (user) {
-                    alert("Alert 4: User Aktif (" + user.email + ")");
-                    loginUi.style.display = 'none';
-                    profileUi.style.display = 'block';
-                    
-                    document.getElementById('user-name').innerText = user.displayName;
-                    document.getElementById('user-email').innerText = user.email;
-                    document.getElementById('user-photo').src = user.photoURL;
+        // Sign Out function
+        signOutBtn.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                // User is signed out. The state change is handled by onAuthStateChanged.
+            } catch (error) {
+                console.error("Sign Out Error:", error.message);
+                authStatus.textContent = `Error during sign out: ${error.message}`;
+            }
+        });
 
-                    // Mengambil data spesifik untuk ditampilkan di layar
-                    const debugData = {
-                        uid: user.uid,
-                        name: user.displayName,
-                        email: user.email,
-                        photo: user.photoURL,
-                        verified: user.emailVerified,
-                        metadata: user.metadata,
-                        provider: user.providerData
-                    };
-                    jsonDisplay.innerText = JSON.stringify(debugData, null, 2);
-                } else {
-                    loginUi.style.display = 'block';
-                    profileUi.style.display = 'none';
-                }
-            });
-        }
+        // Listen for authentication state changes
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in
+                authStatus.textContent = `Welcome, ${user.displayName || user.email}!`;
+                googleSignInBtn.style.display = 'none';
+                signOutBtn.style.display = 'inline-block';
 
-        // Jalankan aplikasi
-        startApp();
-
-        // Button Click: Login
-        document.getElementById('login-btn').onclick = async () => {
-            alert("Alert 2: Menuju Google...");
-            await setPersistence(auth, browserLocalPersistence);
-            signInWithRedirect(auth, provider);
-        };
-
-        // Button Click: Logout
-        document.getElementById('logout-btn').onclick = () => {
-            signOut(auth).then(() => {
-                alert("Sesi Berakhir. Refresh Halaman...");
-                window.location.reload();
-            });
-        };
+                // Display user info as JSON
+                // We create a simpler object to avoid circular references and include relevant details
+                const userInfo = {
+                    uid: user.uid,
+                    email: user.email,
+                    displayName: user.displayName,
+                    photoURL: user.photoURL,
+                    emailVerified: user.emailVerified,
+                    isAnonymous: user.isAnonymous,
+                    providerData: user.providerData.map(profile => ({
+                        providerId: profile.providerId,
+                        uid: profile.uid,
+                        displayName: profile.displayName,
+                        email: profile.email,
+                        photoURL: profile.photoURL
+                    })),
+                    // You can add more user properties if needed.
+                    // To get the full token, use user.getIdTokenResult().then(idTokenResult => console.log(idTokenResult.token));
+                };
+                jsonDisplay.textContent = JSON.stringify(userInfo, null, 2);
+            } else {
+                // User is signed out
+                authStatus.textContent = 'No user signed in.';
+                googleSignInBtn.style.display = 'inline-block';
+                signOutBtn.style.display = 'none';
+                jsonDisplay.textContent = 'No user signed in.';
+            }
+        });
     </script>
 </body>
 </html>
