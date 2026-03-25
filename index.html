@@ -171,9 +171,22 @@
         };
 
         // Tangkap hasil redirect
-        getRedirectResult(auth).catch((err) => {
-            if(err.code !== 'auth/no-auth-event') alert("Error: " + err.message);
-        });
+        // Ganti bagian getRedirectResult di script kamu dengan ini:
+getRedirectResult(auth)
+    .then((result) => {
+        if (result) {
+            console.log("Login Berhasil!");
+        } else {
+            // Kalau login gagal atau dibatalkan sistem, ini akan muncul
+            console.log("Sesi kosong, menunggu login...");
+        }
+    })
+    .catch((error) => {
+        // INI PENTING: Jika ada masalah domain atau konfigurasi,
+        // HP kamu akan memunculkan kotak pesan otomatis.
+        alert("ERROR DARI GOOGLE: " + error.code + " - " + error.message);
+    });
+
 
         // Pantau Status (Ini yang menampilkan JSON)
         onAuthStateChanged(auth, (user) => {
